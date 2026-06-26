@@ -61,6 +61,13 @@ class Settings(BaseSettings):
     # Sentry
     SENTRY_DSN: Optional[str] = None
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def enforce_async_db_url(cls, v: str) -> str:
+        if isinstance(v, str) and v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "case_sensitive": True}
 
     @property
