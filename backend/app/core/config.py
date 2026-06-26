@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
-from typing import Optional
+from typing import Optional, Any
 import secrets
 
 
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
 
     # CORS
-    CORS_ORIGINS: list[str] = [
+    CORS_ORIGINS: Any = [
         "http://localhost:3000",
         "http://localhost:3001",
         "https://nitebuddy.ai",
