@@ -1,0 +1,60 @@
+# FastAPI Core
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.20
+
+# Database
+sqlalchemy==2.0.36
+alembic==1.14.0
+asyncpg==0.30.0
+psycopg2-binary==2.9.10
+
+# Redis
+redis==5.2.1
+hiredis==3.1.0
+
+# Qdrant
+qdrant-client==1.12.1
+
+# Auth & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.2.1
+authlib==1.4.0
+httpx==0.28.1
+
+# AI / LLM
+langchain==0.3.13
+langchain-community==0.3.13
+langchain-openai==0.2.14
+langgraph==0.2.61
+openai==1.59.3
+tiktoken==0.8.0
+
+# Vector Embeddings
+sentence-transformers==3.3.1
+
+# Validation & Config
+pydantic==2.10.4
+pydantic-settings==2.7.0
+python-dotenv==1.0.1
+
+# Async Utilities
+anyio==4.7.0
+aiofiles==24.1.0
+
+# Voice (Phase 3)
+# faster-whisper==1.1.0
+# kokoro==0.9.4
+
+# Scheduling
+apscheduler==3.10.4
+
+# Logging & Monitoring
+loguru==0.7.3
+sentry-sdk[fastapi]==2.19.2
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.24.0
+httpx==0.28.1
