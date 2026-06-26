@@ -11,6 +11,7 @@ Implements 5 memory layers:
 """
 import uuid
 from typing import Optional
+import httpx
 from loguru import logger
 
 from qdrant_client import AsyncQdrantClient
@@ -18,7 +19,6 @@ from qdrant_client.models import (
     Distance, VectorParams, PointStruct, Filter,
     FieldCondition, MatchValue, SearchRequest,
 )
-from sentence_transformers import SentenceTransformer
 
 from app.core.config import settings
 from app.models.models import MemoryLayer
@@ -35,15 +35,31 @@ COLLECTIONS = {
 VECTOR_SIZE = 384  # all-MiniLM-L6-v2 output dimension
 
 _qdrant_client: AsyncQdrantClient | None = None
-_embedding_model: SentenceTransformer | None = None
 
 
-def get_embedding_model() -> SentenceTransformer:
-    global _embedding_model
-    if _embedding_model is None:
-        logger.info(f"Loading embedding model: {settings.EMBEDDING_MODEL}")
-        _embedding_model = SentenceTransformer(settings.EMBEDDING_MODEL)
-    return _embedding_model
+async def get_embeddings(text: str) -> list[float]:
+    """Get embeddings from HuggingFace Inference API or fallback to zero vector."""
+    model_name = settings.EMBEDDING_MODEL
+    if "/" not in model_name:
+        model_name = f"sentence-transformers/{model_name}"
+    
+    api_url = f"https://api-inference.huggingface.co/models/{model_name}"
+    
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(api_url, json={"inputs": text})
+            if response.status_code == 200:
+                result = response.json()
+                if isinstance(result, list) and len(result) > 0:
+                    if isinstance(result[0], list):
+                        return result[0]
+                    return result
+            logger.warning(f"HF Inference API returned status {response.status_code}: {response.text}")
+    except Exception as e:
+        logger.error(f"Error calling HF Inference API: {e}")
+        
+    return [0.0] * VECTOR_SIZE
+
 
 
 async def get_qdrant() -> AsyncQdrantClient:
@@ -85,8 +101,7 @@ async def store_memory(
     Store a memory in the appropriate Qdrant collection.
     Returns the Qdrant point ID.
     """
-    model = get_embedding_model()
-    embedding = model.encode(content).tolist()
+    embedding = await get_embeddings(content)
 
     client = await get_qdrant()
     collection = COLLECTIONS[layer]
@@ -129,8 +144,7 @@ async def retrieve_relevant_memories(
     Returns:
         List of relevant memories sorted by relevance
     """
-    model = get_embedding_model()
-    query_embedding = model.encode(query).tolist()
+    query_embedding = await get_embeddings(query)
     client = await get_qdrant()
 
     search_layers = layers or list(MemoryLayer)
